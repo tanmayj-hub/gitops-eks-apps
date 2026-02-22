@@ -3,4 +3,4 @@ kind: ConfigMap
 metadata:
   name: demo-placeholder
 data:
-  env: dev
+  message: "hello from dev overlay"
