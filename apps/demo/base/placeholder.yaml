@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: demo-placeholder
+  namespace: demo
+data:
+  note: "Builder Chat 0 placeholder only"
