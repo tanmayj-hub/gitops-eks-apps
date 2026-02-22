@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cluster-bootstrap
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: ct-gitops
+
+  source:
+    repoURL: "https://github.com/tanmayj-hub/gitops-eks-apps.git"
+    targetRevision: "main"
+    path: "clusters/ct-gitops-dev/namespaces"
+
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: "argocd" # fine even though it applies cluster-scoped Namespace objects
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

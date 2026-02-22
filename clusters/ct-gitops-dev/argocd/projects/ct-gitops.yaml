@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: ct-gitops
+  namespace: argocd
+  annotations:
+    # Ensure project exists before child Applications are validated
+    argocd.argoproj.io/sync-wave: "-10"
+spec:
+  description: "ct-gitops-dev GitOps project (apps + cluster bootstrap)"
+
+  sourceRepos:
+    - "https://github.com/tanmayj-hub/gitops-eks-apps.git"
+
+  destinations:
+    - server: "https://kubernetes.default.svc"
+      namespace: "argocd"
+    - server: "https://kubernetes.default.svc"
+      namespace: "demo"
+
+  # Allow namespaces to be managed by cluster-bootstrap
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+
+  # Allow typical namespaced app resources (Deployment, Service, ConfigMap, etc.)
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
