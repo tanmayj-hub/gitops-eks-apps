@@ -11,5 +11,5 @@ patches:
 
 images:
   - name: demo-app
-    newName: REPLACE_WITH_YOUR_ECR_URL
+    newName: 944053746993.dkr.ecr.us-east-2.amazonaws.com/ct-gitops/demo-app
     newTag: 0.1.0
