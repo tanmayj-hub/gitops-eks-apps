@@ -5,6 +5,7 @@ namespace: demo
 
 resources:
   - ../../base
+  - ingress.yaml
 
 patches:
   - path: patch-configmap.yaml
