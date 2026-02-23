@@ -8,7 +8,15 @@ metadata:
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/load-balancer-name: ct-gitops-dev-demo
     alb.ingress.kubernetes.io/healthcheck-path: /
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+
+    # ✅ HTTP + HTTPS listeners
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+
+    # ✅ Attach ACM cert (paste from terraform output)
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-east-2:944053746993:certificate/a7a3a7ad-f250-4f6e-a161-4b033c2e5944"
+
+    # ✅ Redirect HTTP -> HTTPS
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
 
     external-dns.alpha.kubernetes.io/hostname: demo.p1.cloudwithtanmay.com
 spec:
