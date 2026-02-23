@@ -3,3 +3,5 @@ kind: Kustomization
 
 resources:
   - placeholder.yaml
+  - deployment.yaml
+  - service.yaml
