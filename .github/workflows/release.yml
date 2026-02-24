@@ -1,0 +1,106 @@
+name: Release to ECR + GitOps PR
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-2
+  ECR_REPOSITORY: ct-gitops/demo-app
+  IMAGE_TAG: 0.1.${{ github.run_number }}
+
+jobs:
+  build_push_and_pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout app source
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: gha-ecr-push-demo-app
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Stamp build info into index.html (for visible rollout proof)
+        shell: bash
+        run: |
+          sed -i "s/__BUILD__/${IMAGE_TAG} (sha-${GITHUB_SHA})/g" index.html
+          grep -n "__BUILD__" -n index.html || true
+
+      - name: Build and push Docker image
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE_1="${REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+          IMAGE_2="${REGISTRY}/${ECR_REPOSITORY}:sha-${GITHUB_SHA}"
+
+          docker build -t "${IMAGE_1}" -t "${IMAGE_2}" .
+          docker push "${IMAGE_1}"
+          docker push "${IMAGE_2}"
+
+      # Checkout the GitOps repo to update kustomization.yaml and open a PR
+      - name: Checkout GitOps repo (gitops-eks-apps)
+        uses: actions/checkout@v4
+        with:
+          repository: tanmayj-hub/gitops-eks-apps
+          token: ${{ secrets.GITOPS_REPO_TOKEN }}
+          path: gitops-eks-apps
+          ref: main
+
+      - name: Update Kustomize image tag in GitOps repo
+        env:
+          FILE_PATH: gitops-eks-apps/apps/demo/overlays/dev/kustomization.yaml
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import os, re
+          from pathlib import Path
+
+          path = Path(os.environ["FILE_PATH"])
+          text = path.read_text()
+
+          new_tag = os.environ["IMAGE_TAG"]
+          updated = re.sub(r'(?m)^(\s*newTag:\s*).+$', r'\1' + new_tag, text)
+
+          if text == updated:
+            raise SystemExit(f"ERROR: newTag line not found or unchanged in {path}")
+
+          path.write_text(updated)
+          print(f"Updated {path} to newTag: {new_tag}")
+          PY
+
+          echo "----"
+          cat "$FILE_PATH"
+          echo "----"
+
+      - name: Create PR in gitops-eks-apps
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITOPS_REPO_TOKEN }}
+          path: gitops-eks-apps
+          commit-message: "chore(demo-app): bump image tag to ${{ env.IMAGE_TAG }}"
+          title: "chore(demo-app): bump image tag to ${{ env.IMAGE_TAG }}"
+          body: |
+            Automated image bump from ct-gitops-demo-app pipeline.
+
+            - New image tag: ${{ env.IMAGE_TAG }}
+            - Commit SHA tag: sha-${{ github.sha }}
+
+            After merging, Argo CD will deploy automatically (GitOps CD).
+          branch: "chore/bump-demo-app-${{ env.IMAGE_TAG }}"
+          base: main
+          delete-branch: true
