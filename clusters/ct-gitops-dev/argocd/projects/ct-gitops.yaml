@@ -27,3 +27,12 @@ spec:
   namespaceResourceWhitelist:
     - group: "*"
       kind: "*"
+
+  # Allow ExternalSecrets to be managed by cluster-bootstrap
+  clusterResourceWhitelist:
+    - group: external-secrets.io
+      kind: ClusterSecretStore
+
+  namespaceResourceWhitelist:
+    - group: external-secrets.io
+      kind: ExternalSecret
