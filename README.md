@@ -26,4 +26,4 @@ Once you have kustomize installed:
 
 ## PR workflow
 Branch → PR → CI runs → 1 approval → squash merge.
-`main` represents desired state for `dev`.
+`main` represents desired state for `dev`
