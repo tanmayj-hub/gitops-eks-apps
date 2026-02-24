@@ -15,4 +15,4 @@ patches:
 images:
   - name: demo-app
     newName: 944053746993.dkr.ecr.us-east-2.amazonaws.com/ct-gitops/demo-app
-    newTag: 0.1.5
+    newTag: 0.1.6
