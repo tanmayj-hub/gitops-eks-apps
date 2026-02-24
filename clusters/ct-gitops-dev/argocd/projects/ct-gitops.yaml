@@ -4,7 +4,6 @@ metadata:
   name: ct-gitops
   namespace: argocd
   annotations:
-    # Ensure project exists before child Applications are validated
     argocd.argoproj.io/sync-wave: "-10"
 spec:
   description: "ct-gitops-dev GitOps project (apps + cluster bootstrap)"
@@ -18,14 +17,12 @@ spec:
     - server: "https://kubernetes.default.svc"
       namespace: "demo"
 
-  # Allow namespaces to be managed by cluster-bootstrap
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace
-        - group: external-secrets.io
+    - group: external-secrets.io
       kind: ClusterSecretStore
 
-  # Allow typical namespaced app resources (Deployment, Service, ConfigMap, etc.)
   namespaceResourceWhitelist:
     - group: "*"
       kind: "*"
