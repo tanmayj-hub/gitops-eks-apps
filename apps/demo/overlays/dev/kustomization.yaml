@@ -5,7 +5,7 @@ namespace: demo
 
 resources:
   - ../../base
-  - ingress.yaml
+#  - ingress.yaml
   - external-secret.yaml
 
 patches:
